@@ -26,6 +26,22 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
     } else if pattern.chars().count() == 1 {
         input_line.contains(pattern)
     } else if pattern.starts_with('[') && pattern.ends_with(']') {
+        // negative character group
+        if pattern.chars().nth(1) == Some('^') {
+            match extract_pattern_letters(pattern) {
+                Some(letters) => {
+                    for letter in letters {
+                        if !input_line.contains(letter) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                None => return false,
+            }
+        }
+
+        // positive character group
         match extract_pattern_letters(pattern) {
             Some(letters) => {
                 for letter in letters {
@@ -87,8 +103,14 @@ mod tests {
 
     #[test]
     fn test_match_single_character_class() {
-        assert!(match_pattern("abc", "[abc]"));
+        assert!(match_pattern("apple", "[abc]"));
         assert!(!match_pattern("xyz", "[abc]"));
+    }
+
+    #[test]
+    fn test_match_negative_single_character_class() {
+        assert!(match_pattern("cat", "[^abc]"));
+        assert!(!match_pattern("cab", "[^abc]"));
     }
 
     #[test]
